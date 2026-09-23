@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prakriti-Niti AI</title>
+  
+  <!-- Tailwind CSS with Typography Plugin for advanced Markdown formatting -->
+  <!-- NOTE FOR PRODUCTION: Replace this script with a compiled static output.css file -->
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            canvas: { DEFAULT: '#F0EBE1', subtle: '#E8E1D5', card: '#ffffff', border: '#D8CFC2' },
+            ink: { primary: '#24211D', muted: '#635B52', faint: '#8F8578' },
+            earth: { 
+              green: '#3E5C46', greenHover: '#334D3A', 
+              blue: '#4A6F82', 
+              amber: '#8F5A2B', amberHover: '#7B4C22', 
+              badge: '#D4E2D4', badgeText: '#2D5236' 
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Markdown Parser and DOMPurify for XSS Protection -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Customizing the Tailwind Prose (Typography) for the Earthy Theme */
+    .prose { color: #2C2723; max-width: none; }
+    .prose p { margin-bottom: 0.75em; margin-top: 0; }
+    .prose strong { color: #24211D; font-weight: 600; }
+    .prose ul { list-style-type: none; padding-left: 0; }
+    .prose li { position: relative; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+    .prose li::before { content: '❖'; position: absolute; left: 0; color: #8F5A2B; font-weight: bold; }
+    .prose table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 0.875rem; }
+    .prose th { border-bottom: 2px solid #D8CFC2; padding: 0.5rem; text-align: left; color: #3E5C46; }
+    .prose td { border-bottom: 1px solid #D8CFC2; padding: 0.5rem; }
+    .prose blockquote { border-left: 4px solid #8F5A2B; padding-left: 1rem; color: #635B52; font-style: italic; background: #F0EBE1; padding-top: 0.5rem; padding-bottom: 0.5rem; border-radius: 0 0.5rem 0.5rem 0;}
+    
+    /* Pure Black Dark Mode Prose Adjustments */
+    .dark .prose { color: #E5E5E5; } /* neutral-200 */
+    .dark .prose strong { color: #F5F5F5; } /* neutral-100 */
+    .dark .prose li::before { color: #F59E0B; }
+    .dark .prose th { border-bottom: 2px solid #333333; color: #86EFAC; }
+    .dark .prose td { border-bottom: 1px solid #222222; }
+    .dark .prose blockquote { background: #111111; color: #D4D4D4; border-left: 4px solid #F59E0B; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D8CFC2; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C5BBAE; }
+    .dark ::-webkit-scrollbar-thumb { background: #333333; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #555555; }
+
+    /* Typing indicator animation */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    .typing-dot { display: inline-block; width: 6px; height: 6px; background-color: #8F5A2B; border-radius: 50%; margin: 0 2px; animation: pulse-dot 1.4s infinite ease-in-out both; }
+    .dark .typing-dot { background-color: #F59E0B; }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+  </style>
+
+  <!-- Pre-load theme script to prevent flash of unstyled content (FOUC) -->
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+</head>
+<body class="bg-canvas dark:bg-black text-ink-primary dark:text-neutral-100 font-sans antialiased overflow-hidden flex h-screen h-dvh transition-colors duration-200">
+
+  <!-- Mobile Overlay -->
+  <div id="mobile-overlay" class="fixed inset-0 bg-ink-primary/20 dark:bg-black/70 backdrop-blur-sm z-40 hidden md:hidden transition-opacity" onclick="toggleMobileMenu()"></div>
+
+  <!-- Sidebar (Mobile Responsive) -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-canvas-subtle dark:bg-[#0A0A0A] border-r border-canvas-border dark:border-[#222222] flex flex-col justify-between p-4 shadow-xl md:shadow-none">
+    <div class="flex flex-col gap-5 overflow-y-auto pr-1">
+      
+      <!-- Brand Header & Mobile Close -->
+      <div class="flex items-center justify-between pt-1">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full border border-[#C5BBAE] dark:border-[#333333] bg-[#F7F4EE] dark:bg-[#111111] flex items-center justify-center text-xl shadow-sm">
+            <i class="fa-solid fa-landmark text-ink-primary dark:text-neutral-200 text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-semibold text-lg leading-tight text-ink-primary dark:text-neutral-100">Prakriti-Niti AI</h1>
+            <p class="text-[11px] text-ink-muted dark:text-neutral-400 tracking-wide">Indian Environmental Policy Scholar</p>
+          </div>
+        </div>
+        <button onclick="toggleMobileMenu()" class="md:hidden text-ink-muted dark:text-neutral-400 hover:text-ink-primary dark:hover:text-white p-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Evidence Taxonomy -->
+      <div class="flex flex-col gap-2 mt-2">
+        <span class="text-[10px] font-bold tracking-wider text-[#736A5F] dark:text-neutral-400 uppercase">Evidence Taxonomy</span>
+        <div class="p-4 bg-earth-green dark:bg-[#2F4736] text-white rounded-xl shadow-sm flex items-center gap-3 border border-transparent dark:border-[#111111]">
+          <i class="fa-solid fa-seedling text-xl"></i>
+          <div>
+            <div class="text-xs font-bold leading-none">Tier 1: INDIA DIRECT</div>
+            <div class="text-[9px] font-normal text-green-100 opacity-80 mt-1">(Sukha Rakshak RAG)</div>
+          </div>
+        </div>
+        <div class="p-4 bg-earth-blue dark:bg-[#324D5B] text-white rounded-xl shadow-sm flex items-center gap-3 border border-transparent dark:border-[#111111]">
+          <i class="fa-solid fa-building-columns text-xl"></i>
+          <div>
+            <div class="text-xs font-bold leading-none">Tier 2: INDIA ADJACENT</div>
+            <div class="text-[9px] font-normal text-blue-100 opacity-80 mt-1">(Bhashini/ PARIVESH e-Gov)</div>
+          </div>
+        </div>
+        <div class="p-4 bg-earth-amber dark:bg-[#68411F] text-white rounded-xl shadow-sm flex items-center gap-3 border border-transparent dark:border-[#111111]">
+          <i class="fa-solid fa-globe text-xl"></i>
+          <div>
+            <div class="text-xs font-bold leading-none">Tier 3: INTERNATIONAL TRANSFERABLE </div>
+            <div class="text-[9px] font-normal text-amber-100 opacity-80 mt-1">(Global Climate RAG) </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Inquiries -->
+      <div class="flex flex-col gap-2 pt-1">
+        <span class="text-[10px] font-bold tracking-wider text-[#736A5F] dark:text-neutral-400 uppercase">Quick Inquiries</span>
+        <button onclick="sendQuickPrompt('What is the Tier 1 Indian drought bot?')" class="w-full text-left text-[11px] bg-[#F7F4EE] dark:bg-[#111111] hover:bg-white dark:hover:bg-[#222222] border border-[#DDD4C7] dark:border-[#333333] rounded-xl px-3 py-2.5 flex items-center gap-2 transition-all shadow-sm text-[#332F2A] dark:text-neutral-200">
+          <span>🌱</span> <span class="truncate">What is the Tier 1 Indian drought bot?</span>
+        </button>
+        <button onclick="sendQuickPrompt('Why standard RAG fails in Indian regulatory domain')" class="w-full text-left text-[11px] bg-[#F7F4EE] dark:bg-[#111111] hover:bg-white dark:hover:bg-[#222222] border border-[#DDD4C7] dark:border-[#333333] rounded-xl px-3 py-2.5 flex items-center gap-2 transition-all shadow-sm text-[#332F2A] dark:text-neutral-200">
+          <span>✨</span> <span class="truncate">Why standard RAG fails in regulatory domain</span>
+        </button>
+        <button onclick="sendQuickPrompt('Detailing the 9-Step RAG policy architecture')" class="w-full text-left text-[11px] bg-[#F7F4EE] dark:bg-[#111111] hover:bg-white dark:hover:bg-[#222222] border border-[#DDD4C7] dark:border-[#333333] rounded-xl px-3 py-2.5 flex items-center gap-2 transition-all shadow-sm text-[#332F2A] dark:text-neutral-200">
+          <span>📐</span> <span class="truncate">Detailing the 9-Step RAG architecture</span>
+        </button>
+        <button onclick="sendQuickPrompt('Key research gaps & future work')" class="w-full text-left text-[11px] bg-[#F7F4EE] dark:bg-[#111111] hover:bg-white dark:hover:bg-[#222222] border border-[#DDD4C7] dark:border-[#333333] rounded-xl px-3 py-2.5 flex items-center gap-2 transition-all shadow-sm text-[#332F2A] dark:text-neutral-200">
+          <span>🔬</span> <span class="truncate">Key research gaps & future work</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="pt-3 border-t border-canvas-border dark:border-[#222222] text-[9px] text-[#736A5F] dark:text-neutral-500 leading-tight mt-4">
+      <!-- Based on scoping study "AI-Powered Conversational Assistants for Environmental Management Policy in India" (Arksey & O'Malley framework). -->
+    </div>
+  </aside>
+
+  <!-- Main Chat Canvas -->
+  <main class="flex-1 flex flex-col min-w-0 bg-[#FDFCFB] dark:bg-black h-full relative transition-colors duration-200">
+    
+    <!-- Header -->
+    <header class="h-14 border-b border-[#E8E1D5] dark:border-[#222222] flex items-center justify-between px-4 sm:px-6 bg-white/90 dark:bg-black/90 backdrop-blur-sm z-10 shrink-0">
+      <div class="flex items-center gap-4">
+        <!-- Hamburger Menu (Mobile) -->
+        <button onclick="toggleMobileMenu()" class="md:hidden text-ink-muted dark:text-neutral-400 hover:text-ink-primary dark:hover:text-white p-1">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div class="bg-earth-green dark:bg-[#2F4736] text-white rounded-full px-3 py-1 text-[10px] sm:text-xs font-bold tracking-wide hidden sm:block shadow-sm">
+          PROTOTYPE STATUS: GROUNDED
+        </div>
+        <h2 class="font-serif font-bold text-[16px] text-ink-primary dark:text-neutral-100 hidden lg:block">
+          Indian Environmental RAG Review
+        </h2>
+      </div>
+      
+      <div class="flex items-center gap-2 text-[#4A453E] dark:text-neutral-300">
+        <!-- Dark Mode Toggle -->
+        <button onclick="toggleTheme()" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-[#222222] transition-colors" title="Toggle Dark Mode">
+          <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+        </button>
+        
+        <button onclick="resetChat()" class="flex items-center gap-1.5 text-[11px] sm:text-xs bg-transparent hover:bg-gray-100 dark:hover:bg-[#222222] px-3 py-1.5 rounded-full border border-gray-300 dark:border-[#333333] transition-colors shadow-sm text-gray-700 dark:text-neutral-300">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span class="hidden sm:inline">Clear Session</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Message Stream -->
+    <section id="chat-window" class="flex-1 overflow-y-auto px-4 sm:px-6 pt-8 pb-6 space-y-8 scroll-smooth">
+      <!-- Chat content populated here -->
+    </section>
+
+    <!-- Input Bar Area -->
+    <div class="p-3 sm:p-4 bg-white dark:bg-black border-t border-[#E8E1D5] dark:border-[#222222] shrink-0">
+      <div class="flex items-end gap-2 max-w-5xl mx-auto">
+        <div class="relative flex-1 bg-white dark:bg-[#111111] border border-[#D8CFC2] dark:border-[#333333] rounded-xl shadow-sm flex items-center focus-within:ring-1 focus-within:ring-earth-green dark:focus-within:ring-earth-green transition-shadow">
+          <!-- Auto-expanding Textarea -->
+          <textarea 
+            id="user-input" 
+            rows="1"
+            placeholder="Ask anything about the research paper (e.g. 'Why was INGRES excluded?')..." 
+            class="w-full bg-transparent text-sm text-ink-primary dark:text-neutral-100 placeholder-ink-faint dark:placeholder-neutral-500 rounded-xl px-4 py-3 focus:outline-none resize-none max-h-32 min-h-[44px]"
+            autocomplete="off"
+          ></textarea>
+        </div>
+        
+        <!-- Action Button (Send/Stop) -->
+        <button 
+          id="action-btn"
+          onclick="handleActionClick()"
+          class="bg-earth-green hover:bg-earth-greenHover text-white text-sm font-medium px-4 sm:px-5 py-3 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors shrink-0 h-[46px] min-w-[50px] sm:min-w-[140px]">
+          <span id="action-text" class="hidden sm:inline">Review Query</span>
+          <i id="action-icon" class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </div>
+      <div class="text-center mt-2">
+        <!-- <span class="text-[10px] text-ink-faint dark:text-neutral-500">Press <kbd class="font-sans font-bold bg-[#E8E1D5] dark:bg-[#222222] dark:text-neutral-300 px-1 rounded">Enter</kbd> to send, <kbd class="font-sans font-bold bg-[#E8E1D5] dark:bg-[#222222] dark:text-neutral-300 px-1 rounded">Shift + Enter</kbd> for new line.</span> -->
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- XSS Protection Helper ---
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    // Markdown -> sanitized HTML. Falls back to escaped plain text if a CDN script failed to load.
+    function renderMarkdown(text) {
+      try {
+        if (window.marked && window.DOMPurify) {
+          return DOMPurify.sanitize(marked.parse(text));
+        }
+      } catch (e) {
+        console.error('Markdown render failed:', e);
+      }
+      return '<p>' + escapeHTML(text).replace(/\n/g, '<br>') + '</p>';
+    }
+
+    class ApiError extends Error {}
+
+    // Elements
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const actionBtn = document.getElementById('action-btn');
+    const actionText = document.getElementById('action-text');
+    const actionIcon = document.getElementById('action-icon');
+    const sidebar = document.getElementById('sidebar');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const themeIcon = document.getElementById('theme-icon');
+
+    const API_URL = "/api/chat";
+    const STORAGE_KEY = 'prakritiNitiHistory';
+    
+    let conversationHistory = [];
+    let isGenerating = false;
+    let abortController = null;
+
+    // --- 0. Theme Initialization ---
+    function updateThemeIcon() {
+      if (document.documentElement.classList.contains('dark')) {
+        themeIcon.className = 'fa-solid fa-sun text-yellow-400 text-sm';
+      } else {
+        themeIcon.className = 'fa-solid fa-moon text-sm';
+      }
+    }
+    
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      updateThemeIcon();
+    }
+    
+    // Set initial icon on load
+    document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+    // --- 1. Auto-Expanding Textarea Logic ---
+    userInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+      if (this.value === '') this.style.height = 'auto';
+    });
+
+    userInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (!isGenerating && this.value.trim() !== '') {
+          submitMessage();
+        }
+      }
+    });
+
+    // --- 2. Mobile Navigation Logic ---
+    function toggleMobileMenu() {
+      const isClosed = sidebar.classList.contains('-translate-x-full');
+      if (isClosed) {
+        sidebar.classList.remove('-translate-x-full');
+        mobileOverlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        mobileOverlay.classList.add('hidden');
+      }
+    }
+
+    // --- 3. Chat State & Storage ---
+    function saveHistory() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
+      } catch (e) {
+        console.warn('Could not save chat history:', e);
+      }
+    }
+
+    function loadHistory() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            conversationHistory = parsed.filter(m => m && typeof m.content === 'string' && (m.role === 'user' || m.role === 'assistant'));
+          }
+          if (conversationHistory.length > 0) {
+            conversationHistory.forEach(msg => appendMessage(msg.role, msg.content, false));
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not restore chat history:', e);
+        conversationHistory = [];
+      }
+      showIntroMessage();
+    }
+
+    function showIntroMessage() {
+      chatWindow.innerHTML = `
+        <div class="flex gap-4 max-w-[800px] mx-auto w-full">
+          <div class="w-10 h-10 rounded-full bg-[#D4E2D4] dark:bg-[#1E3A24] border border-transparent dark:border-[#2D5236] text-earth-green dark:text-[#86EFAC] flex items-center justify-center flex-shrink-0 text-lg mt-1 shadow-sm">
+            🌱
+          </div>
+          <div class="flex-1 bg-white dark:bg-[#111111] border border-transparent dark:border-[#222222] rounded-2xl p-5 shadow-md text-sm leading-relaxed text-[#2C2723] dark:text-neutral-200">
+            Welcome! I am fully indexed on the scoping study <em class="dark:text-neutral-300">"AI-Powered Conversational Assistants for Environmental Management Policy in India"</em>. Ask me about Indian e-governance bots, Bhashini multilingual infrastructure, ClimateGPT, answer faithfulness, or the proposed 9-step policy RAG pipeline.
+          </div>
+        </div>
+      `;
+    }
+
+    // --- 4. Message Appending & Copy Action ---
+    function copyToClipboard(text, btnElement) {
+      const showCopied = () => {
+        const icon = btnElement.querySelector('i');
+        icon.className = 'fa-solid fa-check text-earth-green dark:text-green-400';
+        setTimeout(() => {
+          icon.className = 'fa-regular fa-copy text-ink-muted dark:text-neutral-400 group-hover:text-ink-primary dark:group-hover:text-white';
+        }, 2000);
+      };
+      const fallbackCopy = () => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showCopied(); } catch (e) { console.warn('Copy failed', e); }
+        document.body.removeChild(ta);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function appendMessage(role, content, save = true) {
+      const isUser = role === 'user';
+      const msgWrapper = document.createElement('div');
+      
+      if (isUser) {
+        msgWrapper.className = `flex justify-end items-end gap-3 max-w-[800px] mx-auto w-full`;
+        msgWrapper.innerHTML = `
+          <div class="bg-earth-green dark:bg-[#3E5C46] text-[#F3F6F3] text-sm px-4 py-3 rounded-2xl rounded-br-sm shadow-md max-w-[700px] leading-relaxed whitespace-pre-wrap">${escapeHTML(content)}</div>
+          <div class="w-9 h-9 rounded-full bg-gray-200 dark:bg-[#222222] text-gray-600 dark:text-neutral-400 flex items-center justify-center text-[12px] flex-shrink-0 shadow-sm mb-1">
+            <i class="fa-solid fa-user"></i>
+          </div>
+        `;
+      } else {
+        msgWrapper.className = `flex gap-4 max-w-[800px] mx-auto w-full group`;
+        msgWrapper.innerHTML = `
+          <div class="w-10 h-10 rounded-full bg-[#D4E2D4] dark:bg-[#1E3A24] border border-transparent dark:border-[#2D5236] text-earth-green dark:text-[#86EFAC] flex items-center justify-center flex-shrink-0 text-lg mt-1 shadow-sm">
+            🌱
+          </div>
+          <div class="flex-1 bg-white dark:bg-[#111111] border border-transparent dark:border-[#222222] rounded-2xl rounded-tl-sm p-5 shadow-md text-sm leading-relaxed relative">
+            <div class="prose prose-sm text-[#2C2723] dark:text-neutral-200">
+              ${renderMarkdown(content)}
+            </div>
+            <!-- Utility Copy Button -->
+            <button type="button" class="copy-btn absolute -right-2 -bottom-2 bg-[#F7F4EE] dark:bg-[#222222] border border-[#D8CFC2] dark:border-[#333333] rounded-lg p-1.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-[#E8E1D5] dark:hover:bg-[#333333]" title="Copy response">
+              <i class="fa-regular fa-copy text-ink-muted dark:text-neutral-400 group-hover:text-ink-primary dark:group-hover:text-white text-xs"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      const copyBtn = msgWrapper.querySelector('.copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', () => copyToClipboard(content, copyBtn));
+
+      chatWindow.appendChild(msgWrapper);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      if (save) {
+        conversationHistory.push({ role, content });
+        saveHistory();
+      }
+    }
+
+    // --- 5. Typing Indicator Logic ---
+    function showTypingIndicator() {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'typing-indicator';
+      wrapper.className = `flex gap-4 max-w-[800px] mx-auto w-full opacity-70 transition-opacity`;
+      wrapper.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-[#D4E2D4] dark:bg-[#1E3A24] border border-transparent dark:border-[#2D5236] text-earth-green dark:text-[#86EFAC] flex items-center justify-center flex-shrink-0 text-lg mt-1 shadow-sm">🌱</div>
+        <div class="bg-white dark:bg-[#111111] border border-transparent dark:border-[#222222] rounded-2xl rounded-tl-sm px-5 py-4 shadow-md flex items-center h-auto">
+          <div class="flex items-center pt-1">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+      `;
+      chatWindow.appendChild(wrapper);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) indicator.remove();
+    }
+
+    // --- 6. Abort / Submit Logic ---
+    function setButtonState(generating) {
+      isGenerating = generating;
+      if (generating) {
+        actionBtn.classList.replace('bg-earth-green', 'bg-red-700');
+        actionBtn.classList.replace('hover:bg-earth-greenHover', 'hover:bg-red-800');
+        actionText.innerText = 'Stop';
+        actionIcon.className = 'fa-solid fa-stop text-xs';
+      } else {
+        actionBtn.classList.replace('bg-red-700', 'bg-earth-green');
+        actionBtn.classList.replace('hover:bg-red-800', 'hover:bg-earth-greenHover');
+        actionText.innerText = 'Review Query';
+        actionIcon.className = 'fa-solid fa-paper-plane text-xs';
+      }
+    }
+
+    function handleActionClick() {
+      if (isGenerating) {
+        if (abortController) abortController.abort();
+        setButtonState(false);
+        removeTypingIndicator();
+      } else {
+        if (userInput.value.trim() !== '') {
+          submitMessage();
+        }
+      }
+    }
+
+    async function submitMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      userInput.value = '';
+      userInput.style.height = 'auto';
+      
+      appendMessage('user', message);
+      setButtonState(true);
+      showTypingIndicator();
+
+      abortController = new AbortController();
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: conversationHistory.slice(-20) }),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          let detail = 'The server returned an error (HTTP ' + response.status + ').';
+          try {
+            const errData = await response.json();
+            if (errData && typeof errData.detail === 'string') detail = errData.detail;
+          } catch (_) { /* non-JSON error body */ }
+          throw new ApiError(detail);
+        }
+
+        const data = await response.json();
+        const reply = (data && (data.response || data.content)) || '';
+        if (!reply) throw new ApiError('The server returned an empty response.');
+        removeTypingIndicator();
+        appendMessage('assistant', reply);
+      } catch (err) {
+        removeTypingIndicator();
+        // Drop the unanswered user turn from the saved history so failed requests never pollute later ones.
+        if (conversationHistory.length && conversationHistory[conversationHistory.length - 1].role === 'user') {
+          conversationHistory.pop();
+          saveHistory();
+        }
+        if (err.name === 'AbortError') {
+          appendMessage('assistant', '<em class="dark:text-neutral-400">Generation stopped by user.</em>', false);
+        } else if (err instanceof ApiError) {
+          appendMessage('assistant', '⚠️ <span class="text-red-700 dark:text-red-400 font-medium">' + escapeHTML(err.message) + '</span>', false);
+        } else {
+          appendMessage('assistant', '⚠️ <span class="text-red-700 dark:text-red-400 font-medium">Could not reach the server. Please check your connection (or that the backend is running) and try again.</span>', false);
+        }
+      } finally {
+        setButtonState(false);
+        abortController = null;
+        userInput.focus();
+      }
+    }
+
+    function sendQuickPrompt(promptText) {
+      if (window.innerWidth < 768) toggleMobileMenu(); 
+      userInput.value = promptText;
+      userInput.style.height = 'auto'; 
+      userInput.style.height = (userInput.scrollHeight) + 'px';
+      if (!isGenerating) submitMessage();
+    }
+
+    function resetChat() {
+      if (isGenerating && abortController) abortController.abort();
+      conversationHistory = [];
+      localStorage.removeItem(STORAGE_KEY);
+      chatWindow.innerHTML = '';
+      showIntroMessage();
+      appendMessage('assistant', 'Session cleared. Ask me anything regarding the paper\'s research, framework, or findings.', false);
+    }
+
+    window.addEventListener('DOMContentLoaded', loadHistory);
+  </script>
+</body>
+</html>

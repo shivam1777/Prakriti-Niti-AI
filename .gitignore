@@ -1,0 +1,22 @@
+# Secrets
+.env
+*.env
+**/.env
+backend/.env
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Ignore data directory and documents
+data/
+*.pdf
